@@ -1,10 +1,14 @@
-package kata.supermarket;
+package kata.supermarket.basket;
+
+import kata.supermarket.discount.DiscountCalculator;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+
+import static java.math.BigDecimal.ZERO;
+import static java.math.RoundingMode.HALF_UP;
+import static java.util.Collections.unmodifiableList;
 
 public class Basket {
     private final List<Item> items;
@@ -18,7 +22,7 @@ public class Basket {
     }
 
     List<Item> items() {
-        return Collections.unmodifiableList(items);
+        return unmodifiableList(items);
     }
 
     public BigDecimal total() {
@@ -27,27 +31,22 @@ public class Basket {
 
     private class TotalCalculator {
         private final List<Item> items;
+        private final DiscountCalculator discountCalc;
 
         TotalCalculator() {
             this.items = items();
+            this.discountCalc = new DiscountCalculator();
         }
 
         private BigDecimal subtotal() {
             return items.stream().map(Item::price)
                     .reduce(BigDecimal::add)
-                    .orElse(BigDecimal.ZERO)
-                    .setScale(2, RoundingMode.HALF_UP);
+                    .orElse(ZERO)
+                    .setScale(2, HALF_UP);
         }
 
-        /**
-         * TODO: This could be a good place to apply the results of
-         *  the discount calculations.
-         *  It is not likely to be the best place to do those calculations.
-         *  Think about how Basket could interact with something
-         *  which provides that functionality.
-         */
         private BigDecimal discounts() {
-            return BigDecimal.ZERO;
+            return discountCalc.applyDiscounts(this.items);
         }
 
         private BigDecimal calculate() {
